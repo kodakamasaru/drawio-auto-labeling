@@ -11,7 +11,7 @@
 //
 
 (function () {
-  var CONFIG = '__CMD_DRAG_LABEL_CONFIG__';
+  var CONFIG = '__DRAWIO_AUTO_LABELING_CONFIG__';
   if (typeof CONFIG === 'string') {
     CONFIG = { modifierKey: 'cmd', dictionary: {} };
   }
@@ -36,7 +36,7 @@
         var elt = origCreateItem.apply(this, arguments);
         if (elt && title != null) {
           try {
-            elt.setAttribute('data-cmd-drag-label', String(title));
+            elt.setAttribute('data-drawio-auto-label', String(title));
           } catch (_e) {
             // ignore
           }
@@ -118,8 +118,6 @@
         return !!evt.altKey;
       case 'shift':
         return !!evt.shiftKey;
-      case 'ctrlOrCmd':
-        return !!(evt.metaKey || evt.ctrlKey);
       case 'cmd':
       default:
         if (evt.metaKey) return true;
@@ -153,7 +151,7 @@
     if (!elt) return null;
     var t = null;
     if (typeof elt.getAttribute === 'function') {
-      t = elt.getAttribute('data-cmd-drag-label');
+      t = elt.getAttribute('data-drawio-auto-label');
       if (!t) t = elt.getAttribute('title');
     }
     if (!t && typeof elt.title === 'string') {

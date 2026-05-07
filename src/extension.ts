@@ -4,11 +4,12 @@ import * as vscode from 'vscode';
 
 const DRAWIO_CONFIG_SECTION = 'hediet.vscode-drawio';
 const DRAWIO_PLUGINS_KEY = 'plugins';
-const SECTION = 'vscode-drawio-cmd-drag-label';
-const PLUGIN_FILENAME = 'cmd-drag-label.js';
-const CONFIG_PLACEHOLDER = "'__CMD_DRAG_LABEL_CONFIG__'";
+const SECTION = 'drawio-auto-labeling';
+const PLUGIN_FILENAME = 'auto-labeling.js';
+const LEGACY_PLUGIN_FILENAMES: ReadonlyArray<string> = ['cmd-drag-label.js'];
+const CONFIG_PLACEHOLDER = "'__DRAWIO_AUTO_LABELING_CONFIG__'";
 
-const ALLOWED_KEYS = ['cmd', 'ctrl', 'alt', 'shift', 'ctrlOrCmd'] as const;
+const ALLOWED_KEYS = ['cmd', 'ctrl', 'alt', 'shift'] as const;
 type ModifierKey = typeof ALLOWED_KEYS[number];
 
 interface DrawioPluginEntry {
@@ -32,7 +33,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     await registerPlugin(installedPluginPath);
   } catch (err) {
     void vscode.window.showWarningMessage(
-      `vscode-drawio-cmd-drag-label: failed to register plugin: ${formatError(err)}`,
+      `drawio-auto-labeling: failed to register plugin: ${formatError(err)}`,
     );
   }
 
@@ -44,7 +45,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       try {
         await regeneratePlugin(sourcePluginPath, installedPluginPath);
         const choice = await vscode.window.showInformationMessage(
-          'drawio cmd-drag-label settings updated. Reload the window and re-approve the plugin in drawio for the change to take effect.',
+          'Draw.io Auto Labeling settings updated. Reload the window and re-approve the plugin in drawio for the change to take effect.',
           'Reload Window',
         );
         if (choice === 'Reload Window') {
@@ -52,7 +53,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
       } catch (err) {
         void vscode.window.showWarningMessage(
-          `vscode-drawio-cmd-drag-label: failed to update plugin: ${formatError(err)}`,
+          `drawio-auto-labeling: failed to update plugin: ${formatError(err)}`,
         );
       }
     }),
@@ -111,10 +112,11 @@ function sanitizeDictionary(input: unknown): Record<string, string> {
 async function registerPlugin(pluginPath: string): Promise<void> {
   const config = vscode.workspace.getConfiguration(DRAWIO_CONFIG_SECTION);
   const current = readPluginsList(config);
-  // Strip any prior registration of cmd-drag-label.js (e.g. from older
-  // versions that registered the extension-dir copy) so we don't leave
-  // a dangling entry behind.
-  const purged = current.filter((entry) => path.basename(entry.file) !== PLUGIN_FILENAME);
+  // Strip any prior registration of our plugin file (current or legacy
+  // basename) so we don't leave a dangling entry behind from older
+  // installs.
+  const obsoleteBasenames = new Set<string>([PLUGIN_FILENAME, ...LEGACY_PLUGIN_FILENAMES]);
+  const purged = current.filter((entry) => !obsoleteBasenames.has(path.basename(entry.file)));
   const next: DrawioPluginEntry[] = [...purged, { file: pluginPath }];
   if (sameEntries(current, next)) {
     return;

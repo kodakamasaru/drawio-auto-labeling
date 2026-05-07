@@ -1,4 +1,4 @@
-# Drawio Cmd-Drag Label
+# Draw.io Auto Labeling
 
 Hold a configurable **modifier key** while dragging a shape from the drawio sidebar in VSCode to auto-label the placed cell with the shape's display name (e.g. `Secrets Manager`, `Amazon EC2`). Optionally remap any title to a custom label via a user dictionary.
 
@@ -23,15 +23,15 @@ The first time `hediet.vscode-drawio` loads the plugin it shows a fingerprint ap
 
 | Setting | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `vscode-drawio-cmd-drag-label.modifierKey` | `"cmd" \| "ctrl" \| "alt" \| "shift" \| "ctrlOrCmd"` | `"cmd"` | `cmd` = ⌘ on macOS / ⊞ on Windows. `ctrlOrCmd` = ⌘ on macOS, Ctrl on Windows / Linux. |
-| `vscode-drawio-cmd-drag-label.dictionary` | `{ [title: string]: string }` | `{}` | Map a sidebar title to a custom label. Empty string suppresses labeling for that title. Misses fall back to the title verbatim. |
+| `drawio-auto-labeling.modifierKey` | `"cmd" \| "ctrl" \| "alt" \| "shift"` | `"cmd"` | `cmd` = ⌘ on macOS / ⊞ on Windows (`metaKey`). |
+| `drawio-auto-labeling.dictionary` | `{ [title: string]: string }` | `{}` | Map a sidebar title to a custom label. Empty string suppresses labeling for that title. Misses fall back to the title verbatim. |
 
 Example `settings.json`:
 
 ```jsonc
 {
-  "vscode-drawio-cmd-drag-label.modifierKey": "alt",
-  "vscode-drawio-cmd-drag-label.dictionary": {
+  "drawio-auto-labeling.modifierKey": "alt",
+  "drawio-auto-labeling.dictionary": {
     "Secrets Manager": "シークレットマネージャー",
     "Amazon EC2": "EC2",
     "Lambda": ""
@@ -68,7 +68,7 @@ Press **F5** in VSCode to launch an Extension Development Host, then open any `.
 
 ```bash
 npx vsce package
-code --install-extension vscode-drawio-cmd-drag-label-<version>.vsix
+code --install-extension drawio-auto-labeling-<version>.vsix
 ```
 
 ## License

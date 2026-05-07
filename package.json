@@ -1,7 +1,7 @@
 {
-  "name": "vscode-drawio-cmd-drag-label",
-  "displayName": "Drawio Cmd-Drag Label",
-  "description": "Hold Cmd while dragging a shape from the drawio sidebar to auto-label it with the shape's display name.",
+  "name": "drawio-auto-labeling",
+  "displayName": "Draw.io Auto Labeling",
+  "description": "Hold a configurable modifier key while dragging a shape from the drawio sidebar to auto-label it with the shape's name. Supports a user dictionary to remap titles to custom labels.",
   "version": "0.0.1",
   "publisher": "kodakamasaru",
   "engines": {
@@ -13,7 +13,8 @@
   "keywords": [
     "drawio",
     "diagram",
-    "label",
+    "auto-label",
+    "labeling",
     "shortcut"
   ],
   "extensionDependencies": [
@@ -25,28 +26,26 @@
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
-      "title": "Drawio Cmd-Drag Label",
+      "title": "Draw.io Auto Labeling",
       "properties": {
-        "vscode-drawio-cmd-drag-label.modifierKey": {
+        "drawio-auto-labeling.modifierKey": {
           "type": "string",
           "enum": [
             "cmd",
             "ctrl",
             "alt",
-            "shift",
-            "ctrlOrCmd"
+            "shift"
           ],
           "enumDescriptions": [
             "⌘ on macOS / ⊞ on Windows (metaKey)",
             "Ctrl",
             "Alt / Option",
-            "Shift",
-            "⌘ on macOS, Ctrl on Windows / Linux"
+            "Shift"
           ],
           "default": "cmd",
           "description": "Modifier key to hold while dragging from the drawio sidebar to apply the auto-label."
         },
-        "vscode-drawio-cmd-drag-label.dictionary": {
+        "drawio-auto-labeling.dictionary": {
           "type": "object",
           "default": {},
           "additionalProperties": {
@@ -69,7 +68,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kodakamasaru/vscode-drawio-cmd-drag-label.git"
+    "url": "https://github.com/kodakamasaru/drawio-auto-labeling.git"
   },
   "license": "MIT"
 }
