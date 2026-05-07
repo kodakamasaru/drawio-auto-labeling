@@ -10,6 +10,7 @@
   "categories": [
     "Other"
   ],
+  "icon": "icon.png",
   "keywords": [
     "drawio",
     "diagram",
@@ -64,6 +65,7 @@
   "devDependencies": {
     "@types/node": "^18.19.0",
     "@types/vscode": "^1.80.0",
+    "@vscode/vsce": "^3.9.1",
     "typescript": "^5.4.0"
   },
   "repository": {

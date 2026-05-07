@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="88" fill="#F08705"/>
+  <g transform="translate(80 144)">
+    <path d="M0 32a32 32 0 0 1 32-32h216l104 112-104 112H32a32 32 0 0 1-32-32V32z" fill="#ffffff"/>
+    <circle cx="296" cy="112" r="20" fill="#F08705"/>
+  </g>
+  <text x="152" y="304" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="144" font-weight="800" fill="#F08705" text-anchor="middle" letter-spacing="-4">AL</text>
+</svg>
