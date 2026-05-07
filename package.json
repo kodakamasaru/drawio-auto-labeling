@@ -23,7 +23,40 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
-  "contributes": {},
+  "contributes": {
+    "configuration": {
+      "title": "Drawio Cmd-Drag Label",
+      "properties": {
+        "vscode-drawio-cmd-drag-label.modifierKey": {
+          "type": "string",
+          "enum": [
+            "cmd",
+            "ctrl",
+            "alt",
+            "shift",
+            "ctrlOrCmd"
+          ],
+          "enumDescriptions": [
+            "⌘ on macOS / ⊞ on Windows (metaKey)",
+            "Ctrl",
+            "Alt / Option",
+            "Shift",
+            "⌘ on macOS, Ctrl on Windows / Linux"
+          ],
+          "default": "cmd",
+          "description": "Modifier key to hold while dragging from the drawio sidebar to apply the auto-label."
+        },
+        "vscode-drawio-cmd-drag-label.dictionary": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Map from a sidebar shape title (e.g. \"Secrets Manager\") to a custom label. Titles not in the map fall back to using the title as-is. Set the value to an empty string to suppress labeling for that title."
+        }
+      }
+    }
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",

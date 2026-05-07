@@ -1,27 +1,66 @@
+import { promises as fsp } from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
 const DRAWIO_CONFIG_SECTION = 'hediet.vscode-drawio';
-const PLUGINS_KEY = 'plugins';
+const DRAWIO_PLUGINS_KEY = 'plugins';
+const SECTION = 'vscode-drawio-cmd-drag-label';
+const PLUGIN_FILENAME = 'cmd-drag-label.js';
+const CONFIG_PLACEHOLDER = "'__CMD_DRAG_LABEL_CONFIG__'";
+
+const ALLOWED_KEYS = ['cmd', 'ctrl', 'alt', 'shift', 'ctrlOrCmd'] as const;
+type ModifierKey = typeof ALLOWED_KEYS[number];
 
 interface DrawioPluginEntry {
   file: string;
 }
 
+interface PluginConfig {
+  modifierKey: ModifierKey;
+  dictionary: Record<string, string>;
+}
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-  const pluginPath = context.asAbsolutePath(path.join('plugins', 'cmd-drag-label.js'));
+  const storageDir = context.globalStorageUri.fsPath;
+  await fsp.mkdir(storageDir, { recursive: true });
+
+  const sourcePluginPath = context.asAbsolutePath(path.join('plugins', PLUGIN_FILENAME));
+  const installedPluginPath = path.join(storageDir, PLUGIN_FILENAME);
 
   try {
-    await registerPlugin(pluginPath);
+    await regeneratePlugin(sourcePluginPath, installedPluginPath);
+    await registerPlugin(installedPluginPath);
   } catch (err) {
     void vscode.window.showWarningMessage(
       `vscode-drawio-cmd-drag-label: failed to register plugin: ${formatError(err)}`,
     );
   }
 
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+      if (!e.affectsConfiguration(SECTION)) {
+        return;
+      }
+      try {
+        await regeneratePlugin(sourcePluginPath, installedPluginPath);
+        const choice = await vscode.window.showInformationMessage(
+          'drawio cmd-drag-label settings updated. Reload the window and re-approve the plugin in drawio for the change to take effect.',
+          'Reload Window',
+        );
+        if (choice === 'Reload Window') {
+          await vscode.commands.executeCommand('workbench.action.reloadWindow');
+        }
+      } catch (err) {
+        void vscode.window.showWarningMessage(
+          `vscode-drawio-cmd-drag-label: failed to update plugin: ${formatError(err)}`,
+        );
+      }
+    }),
+  );
+
   context.subscriptions.push({
     dispose: () => {
-      void unregisterPlugin(pluginPath);
+      void unregisterPlugin(installedPluginPath);
     },
   });
 }
@@ -30,14 +69,57 @@ export function deactivate(): void {
   // disposal is wired through context.subscriptions in activate()
 }
 
+async function regeneratePlugin(sourcePath: string, installedPath: string): Promise<void> {
+  const template = await fsp.readFile(sourcePath, 'utf8');
+  const config = readConfig();
+  const inlined = template.replace(CONFIG_PLACEHOLDER, JSON.stringify(config));
+  if (inlined === template) {
+    throw new Error(`config placeholder ${CONFIG_PLACEHOLDER} not found in plugin source`);
+  }
+  await fsp.writeFile(installedPath, inlined, 'utf8');
+}
+
+function readConfig(): PluginConfig {
+  const cfg = vscode.workspace.getConfiguration(SECTION);
+  const rawKey = cfg.get<string>('modifierKey', 'cmd');
+  const rawDict = cfg.get<unknown>('dictionary', {});
+  return {
+    modifierKey: normalizeModifierKey(rawKey),
+    dictionary: sanitizeDictionary(rawDict),
+  };
+}
+
+function normalizeModifierKey(value: string): ModifierKey {
+  return (ALLOWED_KEYS as readonly string[]).includes(value)
+    ? (value as ModifierKey)
+    : 'cmd';
+}
+
+function sanitizeDictionary(input: unknown): Record<string, string> {
+  if (!input || typeof input !== 'object') {
+    return {};
+  }
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(input as Record<string, unknown>)) {
+    if (typeof k === 'string' && typeof v === 'string') {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 async function registerPlugin(pluginPath: string): Promise<void> {
   const config = vscode.workspace.getConfiguration(DRAWIO_CONFIG_SECTION);
   const current = readPluginsList(config);
-  if (current.some((entry) => entry.file === pluginPath)) {
+  // Strip any prior registration of cmd-drag-label.js (e.g. from older
+  // versions that registered the extension-dir copy) so we don't leave
+  // a dangling entry behind.
+  const purged = current.filter((entry) => path.basename(entry.file) !== PLUGIN_FILENAME);
+  const next: DrawioPluginEntry[] = [...purged, { file: pluginPath }];
+  if (sameEntries(current, next)) {
     return;
   }
-  const next: DrawioPluginEntry[] = [...current, { file: pluginPath }];
-  await config.update(PLUGINS_KEY, next, vscode.ConfigurationTarget.Global);
+  await config.update(DRAWIO_PLUGINS_KEY, next, vscode.ConfigurationTarget.Global);
 }
 
 async function unregisterPlugin(pluginPath: string): Promise<void> {
@@ -48,11 +130,11 @@ async function unregisterPlugin(pluginPath: string): Promise<void> {
     return;
   }
   const value = next.length > 0 ? next : undefined;
-  await config.update(PLUGINS_KEY, value, vscode.ConfigurationTarget.Global);
+  await config.update(DRAWIO_PLUGINS_KEY, value, vscode.ConfigurationTarget.Global);
 }
 
 function readPluginsList(config: vscode.WorkspaceConfiguration): DrawioPluginEntry[] {
-  const raw = config.get<unknown>(PLUGINS_KEY);
+  const raw = config.get<unknown>(DRAWIO_PLUGINS_KEY);
   if (!Array.isArray(raw)) {
     return [];
   }
@@ -63,6 +145,14 @@ function readPluginsList(config: vscode.WorkspaceConfiguration): DrawioPluginEnt
       typeof (entry as { file?: unknown }).file === 'string'
     );
   });
+}
+
+function sameEntries(a: DrawioPluginEntry[], b: DrawioPluginEntry[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].file !== b[i].file) return false;
+  }
+  return true;
 }
 
 function formatError(err: unknown): string {

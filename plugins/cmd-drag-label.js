@@ -1,11 +1,21 @@
 /* eslint-disable */
 /* global Draw, mxEvent */
 //
-// drawio plugin: when the user drops a sidebar shape while holding Cmd,
-// auto-set the new cell's label to the sidebar entry's display title.
+// drawio plugin: when the user drops a sidebar shape while holding the
+// configured modifier key, set the new cell's label to either a value
+// from the user dictionary or the sidebar entry's display title.
+//
+// CONFIG is replaced at activation time by the extension host. The
+// string-typed default keeps the plugin functional if the placeholder
+// is ever loaded unreplaced.
 //
 
 (function () {
+  var CONFIG = '__CMD_DRAG_LABEL_CONFIG__';
+  if (typeof CONFIG === 'string') {
+    CONFIG = { modifierKey: 'cmd', dictionary: {} };
+  }
+
   if (typeof Draw === 'undefined' || typeof Draw.loadPlugin !== 'function') {
     return;
   }
@@ -44,11 +54,16 @@
           result = dropHandler.apply(this, arguments);
         }
 
-        if (!isCmdHeld(evt)) {
+        if (!isModifierHeld(evt, CONFIG.modifierKey)) {
           return result;
         }
 
-        var label = readTitle(elt);
+        var rawTitle = readTitle(elt);
+        if (!rawTitle) {
+          return result;
+        }
+
+        var label = mapLabel(rawTitle, CONFIG.dictionary);
         if (!label) {
           return result;
         }
@@ -74,8 +89,6 @@
       return origCreateDragSource.call(this, elt, wrappedDropHandler, preview, w, h);
     };
 
-    // Re-bind drag sources for entries that were created before this
-    // override was installed.
     if (typeof sidebar.refresh === 'function') {
       try {
         sidebar.refresh();
@@ -96,17 +109,44 @@
     return out;
   }
 
-  function isCmdHeld(evt) {
+  function isModifierHeld(evt, key) {
     if (!evt) return false;
-    if (evt.metaKey) return true;
-    if (typeof mxEvent !== 'undefined' && typeof mxEvent.isMetaDown === 'function') {
-      try {
-        return !!mxEvent.isMetaDown(evt);
-      } catch (_e) {
+    switch (key) {
+      case 'ctrl':
+        return !!evt.ctrlKey;
+      case 'alt':
+        return !!evt.altKey;
+      case 'shift':
+        return !!evt.shiftKey;
+      case 'ctrlOrCmd':
+        return !!(evt.metaKey || evt.ctrlKey);
+      case 'cmd':
+      default:
+        if (evt.metaKey) return true;
+        if (typeof mxEvent !== 'undefined' && typeof mxEvent.isMetaDown === 'function') {
+          try {
+            return !!mxEvent.isMetaDown(evt);
+          } catch (_e) {
+            return false;
+          }
+        }
         return false;
+    }
+  }
+
+  // Returns the label to apply, or null to skip labeling.
+  // - Hit with non-empty value -> use mapped value
+  // - Hit with empty string    -> skip (explicit suppression)
+  // - Miss                     -> use the title verbatim
+  function mapLabel(title, dict) {
+    if (!dict) return title;
+    if (Object.prototype.hasOwnProperty.call(dict, title)) {
+      var v = dict[title];
+      if (typeof v === 'string') {
+        return v.length > 0 ? v : null;
       }
     }
-    return false;
+    return title;
   }
 
   function readTitle(elt) {
