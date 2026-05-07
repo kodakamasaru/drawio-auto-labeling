@@ -1,0 +1,42 @@
+{
+  "name": "vscode-drawio-cmd-drag-label",
+  "displayName": "Drawio Cmd-Drag Label",
+  "description": "Hold Cmd while dragging a shape from the drawio sidebar to auto-label it with the shape's display name.",
+  "version": "0.0.1",
+  "publisher": "kodakamasaru",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "drawio",
+    "diagram",
+    "label",
+    "shortcut"
+  ],
+  "extensionDependencies": [
+    "hediet.vscode-drawio"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {},
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kodakamasaru/vscode-drawio-cmd-drag-label.git"
+  },
+  "license": "MIT"
+}
