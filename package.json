@@ -2,7 +2,7 @@
   "name": "drawio-auto-labeling",
   "displayName": "Draw.io Auto Labeling",
   "description": "Hold a configurable modifier key while dragging a shape from the drawio sidebar to auto-label it with the shape's name. Supports a user dictionary to remap titles to custom labels.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "kodakamasaru",
   "engines": {
     "vscode": "^1.80.0"
