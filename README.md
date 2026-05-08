@@ -2,6 +2,12 @@
 
 Hold a configurable **modifier key** while dragging a shape from the drawio sidebar in VSCode to auto-label the placed cell with the shape's display name (e.g. `Secrets Manager`, `Amazon EC2`). Optionally remap any title to a custom label via a user dictionary.
 
+## Demo
+
+![Draw.io Auto Labeling demo](https://raw.githubusercontent.com/kodakamasaru/drawio-auto-labeling/main/assets/demo.gif)
+
+Three drops of the same shape: **default** drawio behaviour (no label), **hold Cmd** (sidebar title becomes the label), and **+ custom mapping** (label resolved through the dictionary).
+
 ## Why
 
 [`hediet.vscode-drawio`](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio) ships AWS / GCP / Azure / etc. shape libraries where each entry has a human-readable title shown on hover. By default that title is **not** applied as the cell label when you drop the shape. This extension adds a one-key shortcut: hold the modifier, the title becomes the label.
